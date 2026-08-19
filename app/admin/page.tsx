@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Clock, DollarSign, ShoppingBag, Star, RefreshCw, MessageSquare, BarChart2 } from 'lucide-react';
+import { Clock, DollarSign, ShoppingBag, Star, RefreshCw, MessageSquare, BarChart2, LogOut, Layout } from 'lucide-react';
 
 export default function Admin() {
   const [user, setUser] = useState<any>(null);
@@ -60,6 +60,11 @@ export default function Admin() {
     }
   }
 
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.reload();
+  }
+
   if (loading) {
     return (
       <main className="shell">
@@ -108,6 +113,7 @@ export default function Admin() {
   const pendingOrdersCount = (statusCounts['PENDING'] || 0) + (statusCounts['PAYMENT_PENDING'] || 0);
   const collectedOrdersCount = statusCounts['COMPLETED'] || 0;
   const inProgressOrdersCount = (statusCounts['RECEIVED'] || 0) + (statusCounts['IN_PROGRESS'] || 0) + (statusCounts['READY'] || 0);
+  const activeOrdersList = orders.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
 
   // Food Sales Metrics
   const foodSales = orders
@@ -144,38 +150,184 @@ export default function Admin() {
     .slice(0, 7); // Show last 7 days
 
   return (
-    <main className="shell">
-      {/* Admin Navbar */}
-      <nav className="nav" style={{ background: '#1c3d2f' }}>
-        <div className="brand" style={{ fontSize: '20px' }}>Campus Hub Staff Portal</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '14px', color: '#e4dcc8' }}>Signed in as: <b>{user.name}</b> ({user.role})</span>
-          <button className="btn" onClick={loadData} style={{ background: 'transparent', color: 'white', padding: '4px' }} title="Refresh Data">
-            <RefreshCw size={18} />
+    <div className="admin-layout">
+      {/* Dynamic Styling */}
+      <style>{`
+        .admin-layout {
+          display: flex;
+          min-height: 100vh;
+          background: var(--paper);
+        }
+        .admin-sidebar {
+          width: 280px;
+          background: #1c3d2f;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          padding: 24px 16px;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          border-right: 1px solid var(--line);
+          z-index: 100;
+        }
+        .admin-content {
+          margin-left: 280px;
+          flex: 1;
+          padding: 40px;
+          min-height: 100vh;
+        }
+        .sidebar-brand {
+          font-family: 'Space Grotesk';
+          font-weight: 700;
+          font-size: 22px;
+          margin-bottom: 32px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          padding-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .sidebar-menu {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          color: #e4dcc8;
+          text-decoration: none;
+          border-radius: 8px;
+          background: transparent;
+          border: 0;
+          width: 100%;
+          text-align: left;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 14px;
+        }
+        .sidebar-link:hover {
+          background: rgba(255,255,255,0.06);
+          color: white;
+        }
+        .sidebar-link.active {
+          background: var(--amber);
+          color: var(--ink);
+        }
+        .badge {
+          background: #7b2020;
+          color: white;
+          font-size: 11px;
+          padding: 2px 7px;
+          border-radius: 999px;
+          margin-left: auto;
+          font-weight: bold;
+        }
+        .badge-active {
+          background: var(--green-dark);
+          color: white;
+        }
+        .sidebar-footer {
+          border-top: 1px solid rgba(255,255,255,0.1);
+          padding-top: 16px;
+          margin-top: 16px;
+        }
+        @media (max-width: 860px) {
+          .admin-layout {
+            flex-direction: column;
+          }
+          .admin-sidebar {
+            width: 100%;
+            position: static;
+            height: auto;
+            padding: 20px;
+          }
+          .admin-content {
+            margin-left: 0;
+            padding: 20px;
+          }
+          .sidebar-brand {
+            margin-bottom: 20px;
+          }
+        }
+      `}</style>
+
+      {/* Sidebar Navigation */}
+      <aside className="admin-sidebar">
+        <div className="sidebar-brand">
+          <Layout size={22} style={{ color: 'var(--amber)' }} />
+          <span>Campus Hub Staff</span>
+        </div>
+
+        <div className="sidebar-menu">
+          <button 
+            className={`sidebar-link ${activeTab === 'orders' ? 'active' : ''}`}
+            onClick={() => setActiveTab('orders')}
+          >
+            <Clock size={18} />
+            <span>Incoming Orders</span>
+            {activeOrdersList.length > 0 && (
+              <span className={`badge ${activeTab === 'orders' ? 'badge-active' : ''}`}>
+                {activeOrdersList.length}
+              </span>
+            )}
           </button>
-          <a href="/" className="btn primary" style={{ textDecoration: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '13px' }}>
+
+          <button 
+            className={`sidebar-link ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart2 size={18} />
+            <span>Analytics & Metrics</span>
+          </button>
+
+          <button 
+            className={`sidebar-link ${activeTab === 'reviews' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reviews')}
+          >
+            <MessageSquare size={18} />
+            <span>Reviews & Feedback</span>
+            {reviews.length > 0 && (
+              <span className={`badge ${activeTab === 'reviews' ? 'badge-active' : ''}`}>
+                {reviews.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="sidebar-footer">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <button className="btn" onClick={loadData} style={{ background: 'rgba(255,255,255,0.08)', color: 'white', padding: '6px 10px', borderRadius: '6px', border: 0 }} title="Refresh Data">
+              <RefreshCw size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              <span style={{ fontSize: '12px' }}>Refresh</span>
+            </button>
+          </div>
+          
+          <div style={{ marginBottom: '16px', fontSize: '13px', color: '#e4dcc8', background: 'rgba(0,0,0,0.15)', padding: '12px', borderRadius: '8px' }}>
+            <div style={{ color: '#aaa', fontSize: '10px', fontWeight: 'bold', marginBottom: '4px' }}>CONNECTED AS</div>
+            <div style={{ fontWeight: 'bold', color: 'white', fontSize: '14px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user.name}</div>
+            <div style={{ fontSize: '12px', color: 'var(--amber)', textTransform: 'capitalize' }}>{user.role.toLowerCase()} portal</div>
+          </div>
+
+          <a href="/" className="btn primary" style={{ textDecoration: 'none', display: 'block', textAlign: 'center', marginBottom: '8px', fontSize: '13px', padding: '10px' }}>
             Customer App
           </a>
-        </div>
-      </nav>
-
-      <div className="container">
-        {/* Navigation Tabs */}
-        <div className="tabs" style={{ marginBottom: '24px' }}>
-          <button className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}>
-            <Clock size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-            Incoming Orders ({orders.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length})
-          </button>
-          <button className={activeTab === 'analytics' ? 'active' : ''} onClick={() => setActiveTab('analytics')}>
-            <BarChart2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-            Analytics & Metrics
-          </button>
-          <button className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>
-            <MessageSquare size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-            Reviews & Feedback ({reviews.length})
+          
+          <button className="btn" onClick={logout} style={{ width: '100%', background: '#7b2020', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}>
+            <LogOut size={14} />
+            <span>Log Out</span>
           </button>
         </div>
+      </aside>
 
+      {/* Main Content Area */}
+      <main className="admin-content">
         {/* Tab 1: Incoming Orders */}
         {activeTab === 'orders' && (
           <div className="card">
@@ -183,7 +335,7 @@ export default function Admin() {
             <p className="muted" style={{ marginBottom: '20px' }}>Advance orders as they move from payment receipt to kitchen preparation, document binding, and student pickup.</p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {orders.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').map(o => (
+              {activeOrdersList.map(o => (
                 <div className="item" key={o.id} style={{ padding: '16px', background: '#fff', border: '1px solid var(--line)' }}>
                   <div className="row">
                     <div>
@@ -240,7 +392,7 @@ export default function Admin() {
                 </div>
               ))}
               
-              {orders.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length === 0 && (
+              {activeOrdersList.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                   <h3>No active orders at this time.</h3>
                   <p className="muted">All orders have been processed or collected.</p>
@@ -425,7 +577,7 @@ export default function Admin() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
