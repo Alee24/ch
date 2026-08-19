@@ -1,7 +1,7 @@
 'use client';
 import { useEffect,useState } from 'react';
 import Link from 'next/link';
-import { Utensils, Printer, Plus, Minus, LogOut, Clock, MessageSquare, Star } from 'lucide-react';
+import { Utensils, Printer, Plus, Minus, LogOut, Clock, MessageSquare, Star, Upload, FileText, CheckCircle2, ShoppingCart, User, AlertCircle } from 'lucide-react';
 import AuthForm from './AuthForm';
 type Product={id:string;name:string;price:number;emoji?:string|null}; type Order={id:string;ticketCode:string;type:string;status:string;total:number;items?:any[];printJob?:any;payment?:any};
 export default function CustomerApp(){const [user,setUser]=useState<any>(undefined);const [tab,setTab]=useState<'food'|'print'|'orders'|'reviews'>('food');const [products,setProducts]=useState<Product[]>([]);const [cart,setCart]=useState<Record<string,number>>({});const [orders,setOrders]=useState<Order[]>([]);const [reviews,setReviews]=useState<any[]>([]);const [message,setMessage]=useState('');
@@ -251,13 +251,451 @@ export default function CustomerApp(){const [user,setUser]=useState<any>(undefin
       </main>
     );
   }
-  return <main className="shell"><nav className="nav"><div className="brand">Campus Hub</div><div><span>{user.name}</span><button onClick={logout} style={{marginLeft:12,background:'transparent',border:0,color:'white'}}><LogOut size={16}/></button></div></nav><div className="container"><div className="tabs"><button className={tab==='food'?'active':''} onClick={()=>setTab('food')}><Utensils size={15}/> Food</button><button className={tab==='print'?'active':''} onClick={()=>setTab('print')}><Printer size={15}/> Printing</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>My orders</button><button className={tab==='reviews'?'active':''} onClick={()=>setTab('reviews')}><MessageSquare size={15}/> Feedback</button></div>{message&&<div className="card" style={{marginBottom:12}}>{message}</div>}
-  {tab==='food'&&<div className="card"><h2>Today's menu</h2>{products.map(p=><div className="item" key={p.id}><div><b>{p.emoji} {p.name}</b><div className="muted">KES {p.price}</div></div><div style={{display:'flex',alignItems:'center',gap:8}}><button className="btn" onClick={()=>setCart(c=>({...c,[p.id]:Math.max(0,(c[p.id]||0)-1)}))}><Minus size={15}/></button><b>{cart[p.id]||0}</b><button className="btn primary" onClick={()=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}))}><Plus size={15}/></button></div></div>)}<div className="row" style={{marginTop:16}}><b>Total: KES {products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0)}</b><button className="btn primary" disabled={!Object.values(cart).some(Boolean)} onClick={createFood}>Place food order</button></div></div>}
-  {tab==='print'&&<PrintForm onCreated={(msg)=>{setMessage(msg);setTab('orders');refresh()}}/>}
-  {tab==='orders'&&<div className="grid">{orders.map(o=><div className="card" key={o.id}><div className="row"><b>{o.ticketCode}</b><span className="pill">{o.status}</span></div><p>{o.type==='FOOD'?o.items?.map(i=>`${i.quantity}× ${i.product.name}`).join(', '):`${o.printJob?.pages} pages · ${o.printJob?.color==='COLOR'?'Colour':'B/W'} · ${o.printJob?.binding}`}</p><b>KES {o.total}</b>{['PENDING','PAYMENT_PENDING','FAILED'].includes(o.status)&&<button className="btn primary" style={{display:'block',marginTop:12}} onClick={()=>pay(o)}>Pay with M-Pesa</button>}{o.status==='READY'&&<p className="muted"><Clock size={14}/> Ready for pickup</p>}<Link href={`/order/${o.id}`}>View tracking</Link></div>)}{orders.length===0&&<div className="card">No orders yet.</div>}</div>}
-  {tab==='reviews'&&<ReviewsTab reviews={reviews} onSubmitted={loadReviews} />}
-  </div></main>}
-function PrintForm({onCreated}:{onCreated:(m:string)=>void}){const [file,setFile]=useState<File|null>(null);const [pages,setPages]=useState(10);const [color,setColor]=useState<'BW'|'COLOR'>('BW');const [binding,setBinding]=useState<'NONE'|'SPIRAL'|'STAPLE'>('NONE');const [busy,setBusy]=useState(false);async function submit(){if(!file)return;setBusy(true);try{const p=await fetch('/api/print/presign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:file.name,contentType:file.type,size:file.size})}).then(r=>r.json());if(!p.url)throw new Error(p.error);await fetch(p.url,{method:'PUT',headers:{'Content-Type':file.type},body:file});const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'PRINT',fileKey:p.key,fileName:file.name,mimeType:file.type,pages,color,binding})});const d=await r.json();if(!r.ok)throw new Error(d.error);onCreated(`Print order ${d.order.ticketCode} created. Pay to confirm.`)}catch(e){onCreated(e instanceof Error?e.message:'Unable to create print order')}finally{setBusy(false)}}return <div className="card"><h2>Print & binding</h2><div className="field"><label>PDF or Word file</label><input type="file" accept=".pdf,.doc,.docx" onChange={e=>setFile(e.target.files?.[0]||null)}/></div><div className="field"><label>Pages</label><select value={pages} onChange={e=>setPages(Number(e.target.value))}>{[10,25,50].map(x=><option key={x}>{x}</option>)}</select></div><div className="field"><label>Colour</label><select value={color} onChange={e=>setColor(e.target.value as any)}><option value="BW">Black & white — KES 5/page</option><option value="COLOR">Colour — KES 20/page</option></select></div><div className="field"><label>Binding</label><select value={binding} onChange={e=>setBinding(e.target.value as any)}><option value="NONE">No binding — Free</option><option value="SPIRAL">Spiral — KES 100</option><option value="STAPLE">Staple — KES 20</option></select></div><button className="btn primary" disabled={!file||busy} onClick={submit}>{busy?'Uploading…':'Create print order'}</button></div>}
+  return (
+    <main className="shell">
+      {/* Visual styling overrides */}
+      <style>{`
+        .customer-nav {
+          background: #1c3d2f;
+          padding: 16px 24px;
+          border-bottom: 4px solid var(--amber);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid var(--line);
+          background: white;
+          border-radius: 12px;
+          padding: 12px 20px;
+          font-weight: 600;
+          font-size: 14px;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+        .tab-btn:hover {
+          background: #fafaf9;
+          border-color: #aaa;
+        }
+        .tab-btn.active {
+          background: var(--amber);
+          border-color: var(--amber);
+          color: var(--ink);
+          box-shadow: 0 4px 10px rgba(227, 150, 62, 0.2);
+        }
+        .food-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+        .food-card {
+          background: white;
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          padding: 18px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+          transition: all 0.2s;
+        }
+        .food-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+        .stepper {
+          display: flex;
+          align-items: center;
+          background: #faf9f6;
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        .stepper-btn {
+          background: transparent;
+          border: 0;
+          padding: 8px 12px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.1s;
+        }
+        .stepper-btn:hover {
+          background: rgba(0,0,0,0.04);
+        }
+        .stepper-val {
+          width: 32px;
+          text-align: center;
+          font-weight: bold;
+        }
+        .checkout-panel {
+          background: #1c3d2f;
+          color: white;
+          border-radius: 20px;
+          padding: 24px;
+          margin-top: 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: 0 10px 25px rgba(28, 61, 47, 0.25);
+        }
+        .print-dropzone {
+          border: 2px dashed #b5a88e;
+          border-radius: 16px;
+          padding: 40px;
+          text-align: center;
+          background: #fafaf9;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-bottom: 24px;
+        }
+        .print-dropzone:hover {
+          background: #f5f4ef;
+          border-color: var(--green);
+        }
+        .order-card {
+          background: white;
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          padding: 20px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          min-height: 200px;
+          transition: all 0.2s;
+        }
+        .order-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        @media (max-width: 768px) {
+          .food-grid {
+            grid-template-columns: 1fr;
+          }
+          .checkout-panel {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+          }
+        }
+      `}</style>
+      
+      {/* Navigation Header */}
+      <nav className="nav customer-nav">
+        <div className="brand" style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShoppingCart size={22} style={{ color: 'var(--amber)' }} />
+          <span>Campus Hub</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '14px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--ink)' }}>
+              {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+            </div>
+            <span>{user.name}</span>
+          </div>
+          <button onClick={logout} className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 0, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <LogOut size={16} />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="container">
+        {/* Welcome Block */}
+        <div className="card" style={{ background: 'linear-gradient(135deg, #1c3d2f, #2f7a5c)', color: 'white', border: 0, padding: '24px 32px', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <h1 style={{ fontFamily: 'Space Grotesk', fontSize: '28px', margin: '0 0 8px 0' }}>Hi, {user.name ? user.name.split(' ')[0] : 'Student'}! 👋</h1>
+            <p style={{ margin: 0, opacity: 0.85, fontSize: '15px' }}>Skip the cafeteria lines or setup your study print jobs before you arrive.</p>
+          </div>
+          <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '120px', opacity: 0.08, pointerEvents: 'none' }}>🎓</div>
+        </div>
+
+        {/* Dynamic Navigation Tabs */}
+        <div style={{ display: 'flex', gap: '8px', margin: '24px 0', flexWrap: 'wrap' }}>
+          <button className={`tab-btn ${tab === 'food' ? 'active' : ''}`} onClick={() => setTab('food')}>
+            <Utensils size={16} />
+            <span>Cafeteria Menu</span>
+          </button>
+          <button className={`tab-btn ${tab === 'print' ? 'active' : ''}`} onClick={() => setTab('print')}>
+            <Printer size={16} />
+            <span>Print Services</span>
+          </button>
+          <button className={`tab-btn ${tab === 'orders' ? 'active' : ''}`} onClick={() => setTab('orders')}>
+            <Clock size={16} />
+            <span>My Orders</span>
+            {orders.filter(o => ['PENDING', 'PAYMENT_PENDING', 'RECEIVED', 'IN_PROGRESS', 'READY'].includes(o.status)).length > 0 && (
+              <span style={{ background: '#7b2020', color: 'white', fontSize: '10px', padding: '1px 5px', borderRadius: '10px', marginLeft: '6px', fontWeight: 'bold' }}>
+                {orders.filter(o => ['PENDING', 'PAYMENT_PENDING', 'RECEIVED', 'IN_PROGRESS', 'READY'].includes(o.status)).length}
+              </span>
+            )}
+          </button>
+          <button className={`tab-btn ${tab === 'reviews' ? 'active' : ''}`} onClick={() => setTab('reviews')}>
+            <MessageSquare size={16} />
+            <span>Give Feedback</span>
+          </button>
+        </div>
+
+        {message && (
+          <div className="card" style={{ marginBottom: '24px', background: '#fef9c3', border: '1px solid #fef08a', color: '#713f12', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle size={18} />
+            <div>{message}</div>
+          </div>
+        )}
+
+        {/* Tab content rendering */}
+        {tab === 'food' && (
+          <div>
+            <div className="food-grid">
+              {products.map(p => (
+                <div className="food-card" key={p.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ fontSize: '32px', background: '#faf9f6', width: '60px', height: '60px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--line)' }}>
+                      {p.emoji || '🍔'}
+                    </div>
+                    <div>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '17px', fontWeight: 'bold' }}>{p.name}</h4>
+                      <span style={{ background: '#dcfce7', color: '#14532d', fontSize: '12px', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
+                        KES {p.price}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Quantity controls */}
+                  <div className="stepper">
+                    <button className="stepper-btn" onClick={() => setCart(c => ({ ...c, [p.id]: Math.max(0, (c[p.id] || 0) - 1) }))}>
+                      <Minus size={14} />
+                    </button>
+                    <span className="stepper-val">{cart[p.id] || 0}</span>
+                    <button className="stepper-btn" onClick={() => setCart(c => ({ ...c, [p.id]: (c[p.id] || 0) + 1 }))}>
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Checkout Panel */}
+            <div className="checkout-panel">
+              <div>
+                <span className="muted" style={{ color: '#aaa', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>ORDER TOTAL</span>
+                <h3 style={{ margin: '4px 0 0 0', fontSize: '24px', fontFamily: 'Space Grotesk' }}>
+                  KES {products.reduce((s, p) => s + p.price * (cart[p.id] || 0), 0)}
+                </h3>
+              </div>
+              <button 
+                className="btn primary" 
+                disabled={!Object.values(cart).some(Boolean)} 
+                onClick={createFood}
+                style={{ padding: '14px 28px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <ShoppingCart size={18} />
+                <span>Place Food Order</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tab === 'print' && <PrintForm onCreated={(msg) => { setMessage(msg); setTab('orders'); refresh(); }} />}
+
+        {tab === 'orders' && (
+          <div className="grid">
+            {orders.map(o => {
+              // Map status to a nice badge style
+              let badgeBg = '#fef9c3';
+              let badgeColor = '#713f12';
+              if (['PAID', 'RECEIVED'].includes(o.status)) {
+                badgeBg = '#dcfce7';
+                badgeColor = '#14532d';
+              } else if (o.status === 'IN_PROGRESS') {
+                badgeBg = '#e0e7ff';
+                badgeColor = '#3730a3';
+              } else if (o.status === 'READY') {
+                badgeBg = '#dbeafe';
+                badgeColor = '#1e3a8a';
+              } else if (o.status === 'COMPLETED') {
+                badgeBg = '#f3f4f6';
+                badgeColor = '#374151';
+              }
+
+              return (
+                <div className="order-card" key={o.id}>
+                  <div>
+                    <div className="row" style={{ marginBottom: '12px' }}>
+                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--green-dark)' }}>{o.ticketCode}</span>
+                      <span className="pill" style={{ background: badgeBg, color: badgeColor }}>
+                        {o.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#777', marginBottom: '16px' }}>
+                      <Clock size={12} />
+                      <span>Placed: {new Date(o.createdAt).toLocaleDateString()} at {new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    
+                    <p style={{ margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>
+                      {o.type === 'FOOD' ? (
+                        <span>🛒 {o.items?.map((i: any) => `${i.quantity}x ${i.product.name}`).join(', ')}</span>
+                      ) : (
+                        <span>📄 {o.printJob?.fileName} ({o.printJob?.pages} pages, {o.printJob?.color.toLowerCase()}, {o.printJob?.binding.toLowerCase()} binding)</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="row" style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginTop: '8px' }}>
+                      <div>
+                        <span className="muted" style={{ fontSize: '11px', display: 'block' }}>TOTAL AMOUNT</span>
+                        <b>KES {o.total}</b>
+                      </div>
+                      <Link href={`/order/${o.id}`} className="btn" style={{ textDecoration: 'none', background: '#e4dcc8', color: 'var(--ink)', padding: '8px 14px', fontSize: '13px', borderRadius: '8px' }}>
+                        Track Live
+                      </Link>
+                    </div>
+                    
+                    {['PENDING', 'PAYMENT_PENDING', 'FAILED'].includes(o.status) && (
+                      <button 
+                        className="btn primary" 
+                        style={{ width: '100%', marginTop: '12px', display: 'block', fontSize: '13px', padding: '10px' }} 
+                        onClick={() => pay(o)}
+                      >
+                        Pay with M-Pesa
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            
+            {orders.length === 0 && (
+              <div className="card" style={{ gridColumn: 'span 2', textAlign: 'center', padding: '40px' }}>
+                <Clock size={40} style={{ color: '#aaa', marginBottom: '12px' }} />
+                <h3>No orders placed yet.</h3>
+                <p className="muted">Your active and historical food or print orders will be listed here.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'reviews' && <ReviewsTab reviews={reviews} onSubmitted={loadReviews} />}
+      </div>
+    </main>
+  );
+}
+
+function PrintForm({onCreated}:{onCreated:(m:string)=>void}){
+  const [file,setFile]=useState<File|null>(null);
+  const [pages,setPages]=useState(10);
+  const [color,setColor]=useState<'BW'|'COLOR'>('BW');
+  const [binding,setBinding]=useState<'NONE'|'SPIRAL'|'STAPLE'>('NONE');
+  const [busy,setBusy]=useState(false);
+
+  // Live Pricing
+  const pagesCost = pages * (color === 'COLOR' ? 20 : 5);
+  const bindingCost = binding === 'SPIRAL' ? 100 : binding === 'STAPLE' ? 20 : 0;
+  const totalCost = pagesCost + bindingCost;
+
+  async function submit(){
+    if(!file)return;
+    setBusy(true);
+    try{
+      const p=await fetch('/api/print/presign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:file.name,contentType:file.type,size:file.size})}).then(r=>r.json());
+      if(!p.url)throw new Error(p.error);
+      await fetch(p.url,{method:'PUT',headers:{'Content-Type':file.type},body:file});
+      const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'PRINT',fileKey:p.key,fileName:file.name,mimeType:file.type,pages,color,binding})});
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.error);
+      onCreated(`Print order ${d.order.ticketCode} created. Pay to confirm.`)
+    }catch(e){
+      onCreated(e instanceof Error?e.message:'Unable to create print order')
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="grid">
+      {/* Configuration Card */}
+      <div className="card">
+        <h2>Document Printing</h2>
+        <p className="muted" style={{ marginBottom: '24px' }}>Upload your document file and select configurations. We support PDF, DOC, and DOCX.</p>
+        
+        {/* Custom Upload Dropzone */}
+        <label className="print-dropzone" style={{ display: 'block' }}>
+          <input type="file" accept=".pdf,.doc,.docx" onChange={e=>setFile(e.target.files?.[0]||null)} style={{ display: 'none' }} />
+          <Upload size={32} style={{ color: 'var(--green)', marginBottom: '8px', marginLeft: 'auto', marginRight: 'auto' }} />
+          <div>
+            <b>{file ? file.name : "Choose a file to print"}</b>
+          </div>
+          <span className="muted" style={{ display: 'block', marginTop: '4px' }}>{file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Click to select a PDF or Word document"}</span>
+        </label>
+
+        <div className="field">
+          <label style={{ fontWeight: 'bold', fontSize: '14px' }}>Estimated Page Count</label>
+          <select value={pages} onChange={e=>setPages(Number(e.target.value))}>
+            {[10,25,50].map(x=><option key={x} value={x}>{x} Pages</option>)}
+          </select>
+        </div>
+
+        <div className="field">
+          <label style={{ fontWeight: 'bold', fontSize: '14px' }}>Colour Mode</label>
+          <select value={color} onChange={e=>setColor(e.target.value as any)}>
+            <option value="BW">Black & White — KES 5 per page</option>
+            <option value="COLOR">Colour — KES 20 per page</option>
+          </select>
+        </div>
+
+        <div className="field">
+          <label style={{ fontWeight: 'bold', fontSize: '14px' }}>Binding Option</label>
+          <select value={binding} onChange={e=>setBinding(e.target.value as any)}>
+            <option value="NONE">No binding — Free</option>
+            <option value="SPIRAL">Spiral binding — KES 100</option>
+            <option value="STAPLE">Staple — KES 20</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Pricing and Details Card */}
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: '5px solid var(--green)' }}>
+        <div>
+          <h2>Order Summary</h2>
+          <p className="muted" style={{ marginBottom: '24px' }}>Verify your document print configurations before submitting.</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="row">
+              <span className="muted">Document:</span>
+              <span style={{ fontWeight: 'bold', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file ? file.name : "Not selected"}</span>
+            </div>
+            <div className="row">
+              <span className="muted">Pages ({pages} × {color === 'BW' ? 'B/W' : 'Colour'}):</span>
+              <b>KES {pagesCost}</b>
+            </div>
+            <div className="row">
+              <span className="muted">Binding ({binding.toLowerCase()}):</span>
+              <b>KES {bindingCost}</b>
+            </div>
+            <hr style={{ border: 0, borderTop: '1px solid var(--line)', margin: '12px 0' }} />
+            <div className="row">
+              <span style={{ fontWeight: 'bold' }}>Total Cost:</span>
+              <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--green-dark)' }}>KES {totalCost}</span>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          className="btn primary" 
+          disabled={!file||busy} 
+          onClick={submit}
+          style={{ width: '100%', padding: '14px', fontSize: '15px', marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+        >
+          {busy ? "Uploading Document..." : "Create Print Order"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function ReviewsTab({reviews, onSubmitted}:{reviews:any[], onSubmitted:()=>void}) {
   const [rating, setRating] = useState(5);
