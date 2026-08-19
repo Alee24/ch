@@ -126,7 +126,8 @@ export default function Admin() {
       return acc;
     }, {} as Record<string, { name: string; quantity: number; revenue: number; emoji: string }>);
 
-  const foodSalesList = Object.values(foodSales).sort((a, b) => b.quantity - a.quantity);
+  const foodSalesList = (Object.values(foodSales) as { name: string; quantity: number; revenue: number; emoji: string }[])
+    .sort((a, b) => b.quantity - a.quantity);
 
   // Daily Sales Trends
   const dailyTrends = orders.reduce((acc, o) => {
@@ -139,7 +140,8 @@ export default function Admin() {
     return acc;
   }, {} as Record<string, { date: string; count: number; revenue: number }>);
 
-  const dailyTrendsList = Object.values(dailyTrends).slice(0, 7); // Show last 7 days
+  const dailyTrendsList = (Object.values(dailyTrends) as { date: string; count: number; revenue: number }[])
+    .slice(0, 7); // Show last 7 days
 
   return (
     <main className="shell">
