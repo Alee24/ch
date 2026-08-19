@@ -98,6 +98,136 @@ export default function CustomerApp(){const [user,setUser]=useState<any>(undefin
           </div>
         </div>
 
+        {/* Benefits Section */}
+        <div id="benefits" style={{ background: 'var(--paper)', borderBottom: '1px solid var(--line)', padding: '80px 0' }}>
+          <div className="container">
+            <h2 style={{ font: "700 32px 'Space Grotesk'", textAlign: 'center', marginBottom: '16px', color: 'var(--ink)' }}>
+              Why Choose Campus Hub?
+            </h2>
+            <p className="muted" style={{ textAlign: 'center', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', fontSize: '15px' }}>
+              We built Campus Hub to make university life simple, fast, and organized. Here is how we improve your day-to-day routine.
+            </p>
+            
+            <div className="grid" style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <div style={{ background: 'var(--green-dark)', color: 'white', borderRadius: '12px', padding: '10px 14px', fontWeight: 'bold', fontSize: '18px' }}>1</div>
+                <div>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold' }}>Zero Queue Waiting</h4>
+                  <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                    Stop standing in lines. Order your lunch while in class or submit assignment files from your study desk, and only visit the kiosk when you receive the "Ready" notification.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <div style={{ background: 'var(--green-dark)', color: 'white', borderRadius: '12px', padding: '10px 14px', fontWeight: 'bold', fontSize: '18px' }}>2</div>
+                <div>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold' }}>Instant Pricing Estimates</h4>
+                  <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                    Upload your Word/PDF document and customize configurations to see the exact price automatically calculated. No hidden costs or manual calculation errors.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <div style={{ background: 'var(--green-dark)', color: 'white', borderRadius: '12px', padding: '10px 14px', fontWeight: 'bold', fontSize: '18px' }}>3</div>
+                <div>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold' }}>Secure Mobile Payments</h4>
+                  <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                    Fully integrated with Safaricom M-Pesa. Payments are processed securely via an automated STK push prompt directly to your phone. No manual transactions or cash handling.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <div style={{ background: 'var(--green-dark)', color: 'white', borderRadius: '12px', padding: '10px 14px', fontWeight: 'bold', fontSize: '18px' }}>4</div>
+                <div>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold' }}>Real-time Status Tracking</h4>
+                  <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                    Track your orders through a reliable state machine. Walk to the kiosk with confidence, knowing your printouts are bound or your food is ready.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials Section */}
+        <div id="testimonials" style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '80px 0' }}>
+          <div className="container">
+            <h2 style={{ font: "700 32px 'Space Grotesk'", textAlign: 'center', marginBottom: '48px', color: 'var(--ink)' }}>
+              Loved by Students & Kiosk Staff
+            </h2>
+            
+            <div className="grid" style={{ gap: '32px' }}>
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px' }}>
+                <p style={{ fontStyle: 'italic', fontSize: '15px', color: '#444', lineHeight: '1.6', marginBottom: '16px' }}>
+                  "Campus Hub has completely transformed how I handle my class printouts. I upload my lab reports directly from my hostel room, choose the spiral binding, and pay via M-Pesa. I pick it up on my way to lecture without losing a minute in line!"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--ink)' }}>GW</div>
+                  <div>
+                    <h5 style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>Grace Wambui</h5>
+                    <span className="muted" style={{ fontSize: '12px' }}>Computer Science Student</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px' }}>
+                <p style={{ fontStyle: 'italic', fontSize: '15px', color: '#444', lineHeight: '1.6', marginBottom: '16px' }}>
+                  "Lunch breaks used to mean long queues at the kiosk, and half the time food was sold out before I reached the front. With Campus Hub, I pre-order my fries and smokies from my phone during my morning break. It is hot and waiting for me!"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--indigo)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'white' }}>DK</div>
+                  <div>
+                    <h5 style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>David Kiprop</h5>
+                    <span className="muted" style={{ fontSize: '12px' }}>Mechanical Engineering Student</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQs Section */}
+        <div id="faqs" style={{ background: 'var(--paper)', borderBottom: '1px solid var(--line)', padding: '80px 0' }}>
+          <div className="container" style={{ maxWidth: '800px' }}>
+            <h2 style={{ font: "700 32px 'Space Grotesk'", textAlign: 'center', marginBottom: '48px', color: 'var(--ink)' }}>
+              Frequently Asked Questions
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="card" style={{ padding: '20px 24px' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>Which document formats can I upload for printing?</h4>
+                <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                  We currently support PDF, DOC, and DOCX file uploads. To ensure formatting stays identical, we recommend exporting your documents to PDF before uploading them.
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '20px 24px' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>How does the M-Pesa payment STK push work?</h4>
+                <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                  When you submit a food or print order, click the 'Pay with M-Pesa' button. Enter your Safaricom phone number, and a secure payment prompt will automatically appear on your phone screen. Simply enter your M-Pesa PIN to complete the transaction.
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '20px 24px' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>Where do I collect my order when it is ready?</h4>
+                <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                  All orders can be collected at the main Campus Kiosk. Show the ticket code (e.g., CH-XXXX) displayed under your orders tab or tracking link to the kiosk operator.
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: '20px 24px' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>Is my document storage secure and private?</h4>
+                <p className="muted" style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                  Yes, your documents are uploaded directly to an S3 secure storage bucket using unique encrypted keys. Files are strictly accessible only by the kiosk operators for printing, and are automatically purged from the system after the order is completed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Auth Section */}
         <div id="auth" style={{ padding: '80px 0', background: 'var(--paper)' }}>
           <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
