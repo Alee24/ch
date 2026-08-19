@@ -25,7 +25,7 @@ This replaces the original client-only prototype with a deployable Next.js + Pos
 6. Start: `npm run dev`.
 7. Visit `http://localhost:3000`.
 
-Seed admin: `admin@campushub.local` / `ChangeMe123!`. Change this immediately outside local development.
+Seed admin: `admin@ch.com` / `Digital2026`. Change this immediately outside local development.
 
 ## Production checklist
 - Use managed PostgreSQL and run versioned Prisma migrations.

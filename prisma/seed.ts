@@ -8,11 +8,11 @@ async function main() {
     { name: 'Smokie', slug: 'smokie', price: 50, emoji: '🌯' },
   ];
   for (const p of products) await prisma.product.upsert({ where: { slug: p.slug }, update: p, create: p });
-  const passwordHash = await bcrypt.hash('ChangeMe123!', 12);
+  const passwordHash = await bcrypt.hash('Digital2026', 12);
   await prisma.user.upsert({
-    where: { email: 'admin@campushub.local' },
+    where: { email: 'admin@ch.com' },
     update: { role: 'ADMIN', passwordHash },
-    create: { name: 'Campus Hub Admin', email: 'admin@campushub.local', passwordHash, role: 'ADMIN' }
+    create: { name: 'Campus Hub Admin', email: 'admin@ch.com', passwordHash, role: 'ADMIN' }
   });
 }
 main().finally(() => prisma.$disconnect());
