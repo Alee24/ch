@@ -39,9 +39,9 @@ export default function CustomerApp(){const [user,setUser]=useState<any>(undefin
                 <a href="#auth" className="btn primary" style={{ textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '15px' }}>
                   Get Started Now
                 </a>
-                <a href="#features" className="btn" style={{ background: '#e4dcc8', color: 'var(--ink)', textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold' }}>
-                  Explore Features
-                </a>
+                <Link href="/menu" className="btn" style={{ background: '#e4dcc8', color: 'var(--ink)', textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold' }}>
+                  View Today's Menu
+                </Link>
               </div>
             </div>
             
