@@ -2,6 +2,10 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Navigate to the directory where this script is located
+cd "$(dirname "$0")"
+
+
 echo "============================================="
 echo "Starting Campus Hub Deployment on VPS..."
 echo "============================================="
