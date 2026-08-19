@@ -9,7 +9,117 @@ export default function CustomerApp(){const [user,setUser]=useState<any>(undefin
  async function createFood(){const items=Object.entries(cart).filter(([,q])=>q>0).map(([productId,quantity])=>({productId,quantity}));const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'FOOD',items})});const d=await r.json();if(!r.ok)return setMessage(d.error);setCart({});setMessage(`Order ${d.order.ticketCode} created. Pay to confirm.`);setTab('orders');refresh()}
  async function pay(o:Order){const phone=prompt('Enter M-Pesa phone number',user?.phone||'');if(!phone)return;const r=await fetch('/api/payments/stk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:o.id,phone})});const d=await r.json();setMessage(r.ok?d.message:d.error);setTimeout(refresh,4000)}
  async function logout(){await fetch('/api/auth/logout',{method:'POST'});setUser(null)}
- if(user===undefined)return <main className="shell"><div className="container">Loading…</div></main>; if(!user)return <main className="shell"><div className="container"><div className="hero"><h1>Campus Hub</h1><p>Order food and send print jobs before you reach the kiosk.</p></div><div style={{maxWidth:460}}><AuthForm onDone={()=>location.reload()}/></div></div></main>;
+  if(user===undefined)return <main className="shell"><div className="container">Loading…</div></main>;
+  if(!user) {
+    return (
+      <main className="shell" style={{ scrollBehavior: 'smooth' }}>
+        {/* Navigation Bar */}
+        <nav className="nav">
+          <div className="brand" style={{ fontSize: '20px' }}>Campus Hub</div>
+          <div>
+            <a href="#auth" className="btn primary" style={{ color: 'var(--ink)', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px' }}>
+              Sign In
+            </a>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="container" style={{ paddingTop: '60px', paddingBottom: '80px' }}>
+          <div className="grid" style={{ alignItems: 'center' }}>
+            <div>
+              <h1 style={{ font: "700 48px 'Space Grotesk'", margin: '0 0 16px', color: 'var(--ink)', lineHeight: '1.15' }}>
+                Skip the Queue. <br/>
+                Order Food & Print Documents.
+              </h1>
+              <p style={{ fontSize: '17px', color: '#555', marginBottom: '28px', lineHeight: '1.6' }}>
+                Campus Hub connects you directly to the campus kiosk. Order from the cafeteria catalogue, upload document print jobs with custom binding options, and pay securely using M-Pesa.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <a href="#auth" className="btn primary" style={{ textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '15px' }}>
+                  Get Started Now
+                </a>
+                <a href="#features" className="btn" style={{ background: '#e4dcc8', color: 'var(--ink)', textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold' }}>
+                  Explore Features
+                </a>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <svg width="240" height="240" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--green-dark)', opacity: 0.85 }}>
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+                <path d="M12 7v4M9 9h6" strokeWidth="1.5" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div id="features" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '80px 0' }}>
+          <div className="container">
+            <h2 style={{ font: "700 32px 'Space Grotesk'", textAlign: 'center', marginBottom: '48px', color: 'var(--ink)' }}>
+              Core Campus Hub Features
+            </h2>
+            
+            <div className="grid" style={{ gap: '32px' }}>
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '32px' }}>🍟</div>
+                <h3 style={{ margin: '8px 0 4px', font: "700 20px 'Space Grotesk'" }}>Smart Food Ordering</h3>
+                <p className="muted" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                  Browse the active cafeteria menu, select your favourite meals, customize quantities, and place orders. Track the kitchen prep status from your phone.
+                </p>
+              </div>
+
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '32px' }}>🖨️</div>
+                <h3 style={{ margin: '8px 0 4px', font: "700 20px 'Space Grotesk'" }}>Quick Document Printing</h3>
+                <p className="muted" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                  Upload PDF or Word files to S3 secure storage. Set print rules (Colour vs B/W), select page numbers, choose binding (Spiral, Staple, or None), and see live pricing.
+                </p>
+              </div>
+
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '32px' }}>📱</div>
+                <h3 style={{ margin: '8px 0 4px', font: "700 20px 'Space Grotesk'" }}>M-Pesa STK Push Integration</h3>
+                <p className="muted" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                  No cash or manual transfers required. Enter your M-Pesa number to receive an instant STK push prompt on your mobile phone to complete payment.
+                </p>
+              </div>
+
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '32px' }}>⏱️</div>
+                <h3 style={{ margin: '8px 0 4px', font: "700 20px 'Space Grotesk'" }}>Real-time Status Tracking</h3>
+                <p className="muted" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                  Watch your orders progress through the state machine: pending, paid, in-progress, ready, and completed. Walk to the kiosk only when your ticket is ready!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Auth Section */}
+        <div id="auth" style={{ padding: '80px 0', background: 'var(--paper)' }}>
+          <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2 style={{ font: "700 32px 'Space Grotesk'", marginBottom: '8px' }}>Access Campus Hub</h2>
+            <p className="muted" style={{ marginBottom: '32px', textAlign: 'center' }}>
+              Sign in or register for a customer account to begin ordering and uploading print jobs.
+            </p>
+            <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
+              <AuthForm onDone={() => location.reload()} />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer style={{ background: 'var(--green-dark)', color: 'white', padding: '24px 0', textAlign: 'center', fontSize: '14px' }}>
+          <div className="container">
+            <p>© {new Date().getFullYear()} Campus Hub. All rights reserved.</p>
+          </div>
+        </footer>
+      </main>
+    );
+  }
  return <main className="shell"><nav className="nav"><div className="brand">Campus Hub</div><div><span>{user.name}</span><button onClick={logout} style={{marginLeft:12,background:'transparent',border:0,color:'white'}}><LogOut size={16}/></button></div></nav><div className="container"><div className="tabs"><button className={tab==='food'?'active':''} onClick={()=>setTab('food')}><Utensils size={15}/> Food</button><button className={tab==='print'?'active':''} onClick={()=>setTab('print')}><Printer size={15}/> Printing</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>My orders</button></div>{message&&<div className="card" style={{marginBottom:12}}>{message}</div>}
  {tab==='food'&&<div className="card"><h2>Today's menu</h2>{products.map(p=><div className="item" key={p.id}><div><b>{p.emoji} {p.name}</b><div className="muted">KES {p.price}</div></div><div style={{display:'flex',alignItems:'center',gap:8}}><button className="btn" onClick={()=>setCart(c=>({...c,[p.id]:Math.max(0,(c[p.id]||0)-1)}))}><Minus size={15}/></button><b>{cart[p.id]||0}</b><button className="btn primary" onClick={()=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}))}><Plus size={15}/></button></div></div>)}<div className="row" style={{marginTop:16}}><b>Total: KES {products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0)}</b><button className="btn primary" disabled={!Object.values(cart).some(Boolean)} onClick={createFood}>Place food order</button></div></div>}
  {tab==='print'&&<PrintForm onCreated={(msg)=>{setMessage(msg);setTab('orders');refresh()}}/>}
