@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: campushub
+      POSTGRES_PASSWORD: campushub
+      POSTGRES_DB: campushub
+    ports:
+      - "5432:5432"
+    volumes:
+      - campus_hub_pg:/var/lib/postgresql/data
+volumes:
+  campus_hub_pg:

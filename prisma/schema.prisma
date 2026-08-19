@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role { CUSTOMER STAFF ADMIN }
+enum OrderType { FOOD PRINT }
+enum OrderStatus { PENDING PAYMENT_PENDING PAID RECEIVED IN_PROGRESS READY COMPLETED CANCELLED FAILED }
+enum PaymentStatus { PENDING SUCCESSFUL FAILED }
+enum PrintColor { BW COLOR }
+enum Binding { NONE SPIRAL STAPLE }
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id        String      @id @default(cuid())
+  name      String
+  slug      String      @unique
+  price     Int
+  emoji     String?
+  active    Boolean     @default(true)
+  orderItems OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Order {
+  id          String        @id @default(cuid())
+  ticketCode  String        @unique
+  type        OrderType
+  status      OrderStatus   @default(PENDING)
+  total       Int
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items       OrderItem[]
+  printJob    PrintJob?
+  payment     Payment?
+  statusLogs  OrderStatusLog[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model PrintJob {
+  id           String      @id @default(cuid())
+  orderId      String      @unique
+  fileKey      String
+  fileName     String
+  mimeType     String
+  pages        Int
+  color        PrintColor
+  binding      Binding
+  bindingPrice Int
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  status          PaymentStatus @default(PENDING)
+  amount          Int
+  phone           String
+  merchantRequestId String?
+  checkoutRequestId String?     @unique
+  receipt         String?
+  rawCallback     Json?
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderStatusLog {
+  id        String      @id @default(cuid())
+  orderId   String
+  from      OrderStatus?
+  to        OrderStatus
+  note      String?
+  actorId   String?
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  @@index([orderId, createdAt])
+}
