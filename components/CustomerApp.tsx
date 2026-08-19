@@ -1,11 +1,12 @@
 'use client';
 import { useEffect,useState } from 'react';
 import Link from 'next/link';
-import { Utensils, Printer, Plus, Minus, LogOut, Clock } from 'lucide-react';
+import { Utensils, Printer, Plus, Minus, LogOut, Clock, MessageSquare, Star } from 'lucide-react';
 import AuthForm from './AuthForm';
 type Product={id:string;name:string;price:number;emoji?:string|null}; type Order={id:string;ticketCode:string;type:string;status:string;total:number;items?:any[];printJob?:any;payment?:any};
-export default function CustomerApp(){const [user,setUser]=useState<any>(undefined);const [tab,setTab]=useState<'food'|'print'|'orders'>('food');const [products,setProducts]=useState<Product[]>([]);const [cart,setCart]=useState<Record<string,number>>({});const [orders,setOrders]=useState<Order[]>([]);const [message,setMessage]=useState('');
- useEffect(()=>{fetch('/api/auth/me').then(r=>r.json()).then(d=>setUser(d.user));fetch('/api/products').then(r=>r.json()).then(d=>setProducts(d.products||[]));},[]); useEffect(()=>{if(user)refresh();},[user]); async function refresh(){const r=await fetch('/api/orders');setOrders((await r.json()).orders||[])}
+export default function CustomerApp(){const [user,setUser]=useState<any>(undefined);const [tab,setTab]=useState<'food'|'print'|'orders'|'reviews'>('food');const [products,setProducts]=useState<Product[]>([]);const [cart,setCart]=useState<Record<string,number>>({});const [orders,setOrders]=useState<Order[]>([]);const [reviews,setReviews]=useState<any[]>([]);const [message,setMessage]=useState('');
+ useEffect(()=>{fetch('/api/auth/me').then(r=>r.json()).then(d=>setUser(d.user));fetch('/api/products').then(r=>r.json()).then(d=>setProducts(d.products||[]));loadReviews();},[]); useEffect(()=>{if(user)refresh();},[user]); async function refresh(){const r=await fetch('/api/orders');setOrders((await r.json()).orders||[])}
+ async function loadReviews(){const r=await fetch('/api/reviews');setReviews((await r.json()).reviews||[])}
  async function createFood(){const items=Object.entries(cart).filter(([,q])=>q>0).map(([productId,quantity])=>({productId,quantity}));const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'FOOD',items})});const d=await r.json();if(!r.ok)return setMessage(d.error);setCart({});setMessage(`Order ${d.order.ticketCode} created. Pay to confirm.`);setTab('orders');refresh()}
  async function pay(o:Order){const phone=prompt('Enter M-Pesa phone number',user?.phone||'');if(!phone)return;const r=await fetch('/api/payments/stk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:o.id,phone})});const d=await r.json();setMessage(r.ok?d.message:d.error);setTimeout(refresh,4000)}
  async function logout(){await fetch('/api/auth/logout',{method:'POST'});setUser(null)}
@@ -250,9 +251,102 @@ export default function CustomerApp(){const [user,setUser]=useState<any>(undefin
       </main>
     );
   }
- return <main className="shell"><nav className="nav"><div className="brand">Campus Hub</div><div><span>{user.name}</span><button onClick={logout} style={{marginLeft:12,background:'transparent',border:0,color:'white'}}><LogOut size={16}/></button></div></nav><div className="container"><div className="tabs"><button className={tab==='food'?'active':''} onClick={()=>setTab('food')}><Utensils size={15}/> Food</button><button className={tab==='print'?'active':''} onClick={()=>setTab('print')}><Printer size={15}/> Printing</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>My orders</button></div>{message&&<div className="card" style={{marginBottom:12}}>{message}</div>}
- {tab==='food'&&<div className="card"><h2>Today's menu</h2>{products.map(p=><div className="item" key={p.id}><div><b>{p.emoji} {p.name}</b><div className="muted">KES {p.price}</div></div><div style={{display:'flex',alignItems:'center',gap:8}}><button className="btn" onClick={()=>setCart(c=>({...c,[p.id]:Math.max(0,(c[p.id]||0)-1)}))}><Minus size={15}/></button><b>{cart[p.id]||0}</b><button className="btn primary" onClick={()=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}))}><Plus size={15}/></button></div></div>)}<div className="row" style={{marginTop:16}}><b>Total: KES {products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0)}</b><button className="btn primary" disabled={!Object.values(cart).some(Boolean)} onClick={createFood}>Place food order</button></div></div>}
- {tab==='print'&&<PrintForm onCreated={(msg)=>{setMessage(msg);setTab('orders');refresh()}}/>}
- {tab==='orders'&&<div className="grid">{orders.map(o=><div className="card" key={o.id}><div className="row"><b>{o.ticketCode}</b><span className="pill">{o.status}</span></div><p>{o.type==='FOOD'?o.items?.map(i=>`${i.quantity}× ${i.product.name}`).join(', '):`${o.printJob?.pages} pages · ${o.printJob?.color==='COLOR'?'Colour':'B/W'} · ${o.printJob?.binding}`}</p><b>KES {o.total}</b>{['PENDING','PAYMENT_PENDING','FAILED'].includes(o.status)&&<button className="btn primary" style={{display:'block',marginTop:12}} onClick={()=>pay(o)}>Pay with M-Pesa</button>}{o.status==='READY'&&<p className="muted"><Clock size={14}/> Ready for pickup</p>}<Link href={`/order/${o.id}`}>View tracking</Link></div>)}{orders.length===0&&<div className="card">No orders yet.</div>}</div>}
- </div></main>}
+  return <main className="shell"><nav className="nav"><div className="brand">Campus Hub</div><div><span>{user.name}</span><button onClick={logout} style={{marginLeft:12,background:'transparent',border:0,color:'white'}}><LogOut size={16}/></button></div></nav><div className="container"><div className="tabs"><button className={tab==='food'?'active':''} onClick={()=>setTab('food')}><Utensils size={15}/> Food</button><button className={tab==='print'?'active':''} onClick={()=>setTab('print')}><Printer size={15}/> Printing</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>My orders</button><button className={tab==='reviews'?'active':''} onClick={()=>setTab('reviews')}><MessageSquare size={15}/> Feedback</button></div>{message&&<div className="card" style={{marginBottom:12}}>{message}</div>}
+  {tab==='food'&&<div className="card"><h2>Today's menu</h2>{products.map(p=><div className="item" key={p.id}><div><b>{p.emoji} {p.name}</b><div className="muted">KES {p.price}</div></div><div style={{display:'flex',alignItems:'center',gap:8}}><button className="btn" onClick={()=>setCart(c=>({...c,[p.id]:Math.max(0,(c[p.id]||0)-1)}))}><Minus size={15}/></button><b>{cart[p.id]||0}</b><button className="btn primary" onClick={()=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}))}><Plus size={15}/></button></div></div>)}<div className="row" style={{marginTop:16}}><b>Total: KES {products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0)}</b><button className="btn primary" disabled={!Object.values(cart).some(Boolean)} onClick={createFood}>Place food order</button></div></div>}
+  {tab==='print'&&<PrintForm onCreated={(msg)=>{setMessage(msg);setTab('orders');refresh()}}/>}
+  {tab==='orders'&&<div className="grid">{orders.map(o=><div className="card" key={o.id}><div className="row"><b>{o.ticketCode}</b><span className="pill">{o.status}</span></div><p>{o.type==='FOOD'?o.items?.map(i=>`${i.quantity}× ${i.product.name}`).join(', '):`${o.printJob?.pages} pages · ${o.printJob?.color==='COLOR'?'Colour':'B/W'} · ${o.printJob?.binding}`}</p><b>KES {o.total}</b>{['PENDING','PAYMENT_PENDING','FAILED'].includes(o.status)&&<button className="btn primary" style={{display:'block',marginTop:12}} onClick={()=>pay(o)}>Pay with M-Pesa</button>}{o.status==='READY'&&<p className="muted"><Clock size={14}/> Ready for pickup</p>}<Link href={`/order/${o.id}`}>View tracking</Link></div>)}{orders.length===0&&<div className="card">No orders yet.</div>}</div>}
+  {tab==='reviews'&&<ReviewsTab reviews={reviews} onSubmitted={loadReviews} />}
+  </div></main>}
 function PrintForm({onCreated}:{onCreated:(m:string)=>void}){const [file,setFile]=useState<File|null>(null);const [pages,setPages]=useState(10);const [color,setColor]=useState<'BW'|'COLOR'>('BW');const [binding,setBinding]=useState<'NONE'|'SPIRAL'|'STAPLE'>('NONE');const [busy,setBusy]=useState(false);async function submit(){if(!file)return;setBusy(true);try{const p=await fetch('/api/print/presign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:file.name,contentType:file.type,size:file.size})}).then(r=>r.json());if(!p.url)throw new Error(p.error);await fetch(p.url,{method:'PUT',headers:{'Content-Type':file.type},body:file});const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'PRINT',fileKey:p.key,fileName:file.name,mimeType:file.type,pages,color,binding})});const d=await r.json();if(!r.ok)throw new Error(d.error);onCreated(`Print order ${d.order.ticketCode} created. Pay to confirm.`)}catch(e){onCreated(e instanceof Error?e.message:'Unable to create print order')}finally{setBusy(false)}}return <div className="card"><h2>Print & binding</h2><div className="field"><label>PDF or Word file</label><input type="file" accept=".pdf,.doc,.docx" onChange={e=>setFile(e.target.files?.[0]||null)}/></div><div className="field"><label>Pages</label><select value={pages} onChange={e=>setPages(Number(e.target.value))}>{[10,25,50].map(x=><option key={x}>{x}</option>)}</select></div><div className="field"><label>Colour</label><select value={color} onChange={e=>setColor(e.target.value as any)}><option value="BW">Black & white — KES 5/page</option><option value="COLOR">Colour — KES 20/page</option></select></div><div className="field"><label>Binding</label><select value={binding} onChange={e=>setBinding(e.target.value as any)}><option value="NONE">No binding — Free</option><option value="SPIRAL">Spiral — KES 100</option><option value="STAPLE">Staple — KES 20</option></select></div><button className="btn primary" disabled={!file||busy} onClick={submit}>{busy?'Uploading…':'Create print order'}</button></div>}
+
+function ReviewsTab({reviews, onSubmitted}:{reviews:any[], onSubmitted:()=>void}) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  async function submit() {
+    if (!comment.trim()) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      setComment('');
+      setRating(5);
+      setMsg('Thank you! Your feedback has been submitted.');
+      onSubmitted();
+    } catch (e: any) {
+      setMsg(e.message || 'Failed to submit review');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="card">
+        <h2>Submit Feedback</h2>
+        <p className="muted" style={{ marginBottom: '16px' }}>Let us know how we are doing! Share your experience with food or printing.</p>
+        
+        {msg && <div style={{ background: '#dcfce7', color: '#14532d', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontWeight: 'bold' }}>{msg}</div>}
+        
+        <div className="field">
+          <label>Rating</label>
+          <div style={{ display: 'flex', gap: '6px', margin: '4px 0 12px 0' }}>
+            {[1, 2, 3, 4, 5].map(star => (
+              <button 
+                key={star} 
+                onClick={() => setRating(star)} 
+                style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }}
+              >
+                <Star size={24} fill={star <= rating ? 'var(--amber)' : 'none'} stroke="var(--amber)" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <label>Comment</label>
+          <textarea 
+            value={comment} 
+            onChange={e => setComment(e.target.value)} 
+            placeholder="Write your review here..."
+            style={{ width: '100%', minHeight: '100px', padding: '11px', border: '1px solid var(--line)', borderRadius: '10px', fontFamily: 'inherit' }}
+          />
+        </div>
+
+        <button className="btn primary" disabled={busy || !comment.trim()} onClick={submit}>
+          {busy ? 'Submitting...' : 'Submit Review'}
+        </button>
+      </div>
+
+      <div className="card">
+        <h2>Recent Reviews</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+          {reviews.map((r: any) => (
+            <div key={r.id} style={{ borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+              <div className="row" style={{ marginBottom: '4px' }}>
+                <div>
+                  <b>{r.name}</b> <span className="muted" style={{ fontSize: '11px' }}>· {new Date(r.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <Star key={star} size={14} fill={star <= r.rating ? 'var(--amber)' : 'none'} stroke="var(--amber)" />
+                  ))}
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: '13px', color: '#444' }}>"{r.comment}"</p>
+            </div>
+          ))}
+          {reviews.length === 0 && <p className="muted">No reviews yet. Be the first to leave feedback!</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
