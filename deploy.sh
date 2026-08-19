@@ -17,8 +17,6 @@ if [ ! -f .env.production ]; then
     exit 1
 fi
 
-# Load variables from .env.production
-export $(grep -v '^#' .env.production | xargs)
 
 # Pull latest changes from git
 echo "Pulling latest changes from Git repository..."
