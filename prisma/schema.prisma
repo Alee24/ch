@@ -7,12 +7,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { CUSTOMER STAFF ADMIN }
-enum OrderType { FOOD PRINT }
-enum OrderStatus { PENDING PAYMENT_PENDING PAID RECEIVED IN_PROGRESS READY COMPLETED CANCELLED FAILED }
-enum PaymentStatus { PENDING SUCCESSFUL FAILED }
-enum PrintColor { BW COLOR }
-enum Binding { NONE SPIRAL STAPLE }
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+enum OrderType {
+  FOOD
+  PRINT
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PENDING
+  PAID
+  RECEIVED
+  IN_PROGRESS
+  READY
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+}
+
+enum PrintColor {
+  BW
+  COLOR
+}
+
+enum Binding {
+  NONE
+  SPIRAL
+  STAPLE
+}
 
 model User {
   id           String   @id @default(cuid())
