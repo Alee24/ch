@@ -3,7 +3,7 @@ import { useEffect,useState } from 'react';
 import Link from 'next/link';
 import { Utensils, Printer, Plus, Minus, LogOut, Clock, MessageSquare, Star, Upload, FileText, CheckCircle2, ShoppingCart, User, AlertCircle } from 'lucide-react';
 import AuthForm from './AuthForm';
-type Product={id:string;name:string;price:number;emoji?:string|null}; type Order={id:string;ticketCode:string;type:string;status:string;total:number;items?:any[];printJob?:any;payment?:any};
+type Product={id:string;name:string;price:number;emoji?:string|null}; type Order={id:string;ticketCode:string;type:string;status:string;total:number;createdAt:string;items?:any[];printJob?:any;payment?:any};
 export default function CustomerApp(){const [user,setUser]=useState<any>(undefined);const [tab,setTab]=useState<'food'|'print'|'orders'|'reviews'>('food');const [products,setProducts]=useState<Product[]>([]);const [cart,setCart]=useState<Record<string,number>>({});const [orders,setOrders]=useState<Order[]>([]);const [reviews,setReviews]=useState<any[]>([]);const [message,setMessage]=useState('');
  useEffect(()=>{fetch('/api/auth/me').then(r=>r.json()).then(d=>setUser(d.user));fetch('/api/products').then(r=>r.json()).then(d=>setProducts(d.products||[]));loadReviews();},[]); useEffect(()=>{if(user)refresh();},[user]); async function refresh(){const r=await fetch('/api/orders');setOrders((await r.json()).orders||[])}
  async function loadReviews(){const r=await fetch('/api/reviews');setReviews((await r.json()).reviews||[])}
