@@ -41,6 +41,8 @@ services:
       # Operational settings
       ORDER_TTL_MINUTES: ${ORDER_TTL_MINUTES:-30}
       MAX_PRINT_FILE_MB: ${MAX_PRINT_FILE_MB:-20}
+    ports:
+      - "127.0.0.1:3009:3000"
     depends_on:
       postgres:
         condition: service_healthy
